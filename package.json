@@ -1,18 +1,21 @@
-{ "name" : "json2json"
-, "description" : "A simple way to transform a JSON object to another JSON structure"
+{ "name" : "q-json2json"
+, "description" : "A simple way to transform a JSON object to another JSON structure, supports async transformation operators via Q promises"
 , "version" : "0.2.3"
 , "author" : "Joel Van Horn <joel@joelvanhorn.com>"
+, "contributors": 
+  [ { "name": "David Losada Carballo", "email": "david@tuxpiper.com" } ]
 , "repository" :
   { "type" : "git"
-  , "url" : "git://github.com/joelvh/json2json.git"
+  , "url" : "git://github.com/tuxpiper/q-json2json.git"
   }
-, "bugs" : { "url" : "https://github.com/joelvh/json2json/issues" }
+, "bugs" : { "url" : "https://github.com/tuxpiper/q-json2json/issues" }
 , "os" : [ "linux", "darwin", "freebsd", "win32", "sunos" ]
 , "directories" : { "lib" : "./lib/" }
 , "main" : "index.js"
 , "dependencies" :
   { "coffee-script" : ">=1.2.0"
   , "sysmo" : ">=0.0.11"
+  , "q" : ">=1.1.1"
   }
 , "engines" : { "node" : ">=0.1.97" }
 , "licenses" : []

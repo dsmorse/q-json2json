@@ -1,6 +1,7 @@
 # handle CommonJS/Node.js or browser
 
 sysmo = require?('sysmo') || window?.Sysmo
+Q = require 'q'
 
 # class definition
 
@@ -85,9 +86,12 @@ class TemplateConfig
     else
       pair      = {}
     
-    pair.key    = key if 'key' not of pair
-    pair.value  = value if 'value' not of pair
-    pair
+    # if pair is just a value, make a promise from it
+    pair = Q(pair) if not Q.isPromise(pair)
+    pair.then (pairV) ->
+      pairV.key    = key if 'key' not of pairV
+      pairV.value  = value if 'value' not of pairV
+      pairV   # fulfillment value for the promise we return
 
 # register module (CommonJS/Node.js) or handle browser
 

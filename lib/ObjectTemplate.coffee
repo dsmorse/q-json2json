@@ -4,6 +4,8 @@
 sysmo           = require?('sysmo') || window?.Sysmo
 TemplateConfig  = require?('./TemplateConfig') || window?.json2json.TemplateConfig
 
+Q = require 'q'
+
 # class definition
 
 class ObjectTemplate
@@ -14,38 +16,40 @@ class ObjectTemplate
   transform: (data) =>
     node = @nodeToProcess data
     
-    return null unless node?
+    return Q(null) unless node?
     
     # process properties
     switch sysmo.type node
       when 'Array'  then @processArray node
       when 'Object' then @processMap node
-      else null #node
+      else Q(null) #node
   
   # assume each array element is a map
   processArray: (node) =>
     # convert array to hash if config.arrayToMap is true
     context = if @config.arrayToMap then {} else []
     
-    for element, index in node #when @config.processable node, element, index
-      # convert the index to a key if converting array to map 
-      # @updateContext handles the context type automatically
-      key = if @config.arrayToMap then @chooseKey(element) else index
-      # don't call @processMap because it can lead to double nesting if @config.nestTemplate is true
-      value = @createMapStructure(element)
-      @updateContext context, element, value, key
-    context
+    ([e,i] for e, i in node).reduce (chain, ei) =>
+      [element, index] = ei
+      chain.then () =>
+        # convert the index to a key if converting array to map 
+        # @updateContext handles the context type automatically
+        key = if @config.arrayToMap then @chooseKey(element) else index
+        # don't call @processMap because it can lead to double nesting if @config.nestTemplate is true
+        @createMapStructure(element).then (value) =>
+          @updateContext context, element, value, key
+    , Q(context)
   
   processMap: (node) =>
     
-    context = @createMapStructure node
+    @createMapStructure(node).then (context) =>
     
-    if @config.nestTemplate and (nested_key = @chooseKey(node))
-      nested_context              = {}
-      nested_context[nested_key]  = context;
-      context                     = nested_context
+      if @config.nestTemplate and (nested_key = @chooseKey(node))
+        nested_context              = {}
+        nested_context[nested_key]  = context;
+        context                     = nested_context
     
-    context
+      context
   
   createMapStructure: (node) =>
     
@@ -54,12 +58,15 @@ class ObjectTemplate
     return @chooseValue(node, context) unless @config.nestTemplate
     
     # loop through properties to pick up any key/values that should be nested
-    for key, value of node when @config.processable node, value, key
-      # call @getNode() to register the use of the property on that node
-      nested  = @getNode(node, key)
-      value   = @chooseValue nested
-      @updateContext context, nested, value, key
-    context
+    ([k,v] for k, v of node).reduce (chain, kv) =>
+      [key, value] = kv
+      chain.then () =>
+        return context if not @config.processable node, value, key
+        # call @getNode() to register the use of the property on that node
+        nested  = @getNode(node, key)
+        @chooseValue(nested).then (value) =>
+          @updateContext context, nested, value, key
+    , Q(context)
   
   chooseKey: (node) =>
     result = @config.getKey node
@@ -73,43 +80,48 @@ class ObjectTemplate
     result = @config.getValue node
     
     switch result.name
-      when 'value'    then result.value
-      when 'path'     then @getNode node, result.value
+      when 'value'    then Q(result.value)
+      when 'path'     then Q(@getNode node, result.value)
       when 'template' then @processTemplate node, context, result.value
-      else null
+      else Q(null)
   
   processTemplate: (node, context, template = {}) =>
+    chain = ([k,v] for k, v of template).reduce (chain, kv) =>
+      [key, value] = kv
+      chain.then () =>
+        # process mapping instructions
+        switch sysmo.type value
+          # string should be the path to a property on the current node
+          when 'String'   then  filter = (node, path)   => @getNode(node, path)
+          # array gets multiple property values
+          when 'Array'    then  filter = (node, paths)  => @getNode(node, path) for path in paths
+          # function is a custom filter for the node
+          # TODO: allow async for this custom function as well
+          when 'Function' then  filter = (node, value)  => value.call(@, node, key)
+          when 'Object'   then  filter = (node, config) => new @constructor(config, @).transform node
+          else                  filter = (node, value)  -> value
+        
+        value = filter(node, value)
+        @updateContext context, node, value, key
+    , Q(context)
     
-    # loop through properties in template
-    for key, value of template
-      # process mapping instructions
-      switch sysmo.type value
-        # string should be the path to a property on the current node
-        when 'String'   then  filter = (node, path)   => @getNode(node, path)
-        # array gets multiple property values
-        when 'Array'    then  filter = (node, paths)  => @getNode(node, path) for path in paths
-        # function is a custom filter for the node
-        when 'Function' then  filter = (node, value)  => value.call(@, node, key)
-        when 'Object'   then  filter = (node, config) => new @constructor(config, @).transform node
-        else                  filter = (node, value)  -> value
-      
-      value = filter(node, value)
-      @updateContext context, node, value, key
-    
-    @processRemaining context, node
-    context
+    chain.then () =>
+      @processRemaining context, node
   
   processRemaining: (context, node) =>
     # loop through properties to pick up any key/values that should be chosen.
     # skip if node property already used, the property was specified by the template, or it should not be choose.
-    for key, value of node when !@pathAccessed(node, key) and key not in context and @config.processable node, value, key
-      @updateContext context, node, value, key
-    context
-    
+    ([k,v] for k, v of node).reduce (chain, kv) =>
+      [key, value] = kv
+      chain.then () =>
+        return context if @pathAccessed(node, key) or key in context or !@config.processable node, value, key
+        @updateContext context, node, value, key
+    , Q(context)
+
   updateContext: (context, node, value, key) =>
     # format key and value
-    formatted = @config.applyFormatting node, value, key
-    @aggregateValue context, formatted.key, formatted.value
+    @config.applyFormatting(node, value, key).then (formatted) =>
+      @aggregateValue context, formatted.key, formatted.value
       
   aggregateValue: (context, key, value) =>
     return context unless value?
