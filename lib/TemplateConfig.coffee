@@ -91,7 +91,11 @@ class TemplateConfig
     pair.then (pairV) ->
       pairV.key    = key if 'key' not of pairV
       pairV.value  = value if 'value' not of pairV
-      pairV   # fulfillment value for the promise we return
+      #
+      pairV.value  = Q(pairV.value) if not Q.isPromise(pairV.value)
+      pairV.value.then (value) ->
+        pairV.value = value
+        pairV
 
 # register module (CommonJS/Node.js) or handle browser
 
