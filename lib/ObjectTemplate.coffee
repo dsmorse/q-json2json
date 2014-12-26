@@ -13,9 +13,21 @@ class ObjectTemplate
     @config = new TemplateConfig config
     @parent = parent
   
+  getTransformer: (data) =>
+    return new _ObjectTransformer(@config, @parent, data)
+
   transform: (data) =>
-    node = @nodeToProcess data
-    
+    t = @getTransformer(data)
+    return t.transform()
+
+# Encapsulate all transform operation process and vars in an object, so these
+# are properly freed once the transformation is done.
+class _ObjectTransformer
+  constructor: (@config, @parent, @data) ->
+
+  transform: () =>
+    node = @nodeToProcess @data
+
     return Q(null) unless node?
     
     # process properties
