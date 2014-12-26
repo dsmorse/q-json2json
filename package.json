@@ -1,7 +1,7 @@
 {
   "name": "q-json2json",
   "description": "A simple way to transform a JSON object to another JSON structure, supports async transformation operators via Q promises",
-  "version": "0.2.3-1",
+  "version": "0.2.3-2",
   "author": "Joel Van Horn <joel@joelvanhorn.com>",
   "contributors": [
     {
