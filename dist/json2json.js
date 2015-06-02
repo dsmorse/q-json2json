@@ -1,4 +1,4 @@
-/*! q-json2json - v0.2.3-1 - 2015-06-02
+/*! q-json2json - v0.2.4 - 2015-06-02
 * https://github.com/tuxpiper/q-json2json
  Copyright 2011 Joel Van Horn. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy

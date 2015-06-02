@@ -38,12 +38,27 @@ module.exports = function(grunt) {
 		},
 		uglify: {
 			options: {
-				banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n'
+				banner: '/*! <%= pkg.name %> - v<%= pkg.version %>  <%= grunt.template.today("dd-mm-yyyy") %> */\n'
 			},
 			dist: {
 				files: {
 					'dist/json2json.min.js': ['dist/json2json.js']
 				}
+			}
+		},
+		bump: {
+			options: {
+				files: ['package.json', 'bower.json'],
+				updateConfigs: ['pkg'],
+				commit: true,
+				commitMessage: 'Release v%VERSION%',
+				commitFiles: ['package.json', 'bower.json', 'dist/'], // '-a' for all files
+				createTag: true,
+				tagName: 'v%VERSION%',
+				tagMessage: 'Version %VERSION%',
+				push: false,
+				pushTo: 'origin',
+				gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d' // options to use with '$ git describe'
 			}
 		}
 	});
@@ -52,8 +67,20 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
+	grunt.loadNpmTasks('grunt-bump');
+
 
 	// Default task.
-	grunt.registerTask('default', ['clean', 'coffee', 'concat', 'uglify']);
+	grunt.registerTask('default', ['clean', 'build']);
+	grunt.registerTask('build', ['coffee', 'concat', 'uglify']);
+
+	//use one of the four release tasks to build the artifacts for the release (it will push the docs pages only)
+	grunt.registerTask('release:patch', ['clean', 'bump-only:patch', 'build']);
+	grunt.registerTask('release:minor', ['clean', 'bump-only:minor', 'build']);
+	grunt.registerTask('release:major', ['clean', 'bump-only:major', 'build']);
+	grunt.registerTask('release:git',   ['clean', 'bump-only:git', 'build']);
+
+	//use this task to publish the release artifacts
+	grunt.registerTask('release:commit', ['bump-commit']);
 
 };
