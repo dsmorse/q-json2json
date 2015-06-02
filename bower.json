@@ -1,0 +1,25 @@
+{
+  "name": "q-json2json",
+  "main": "dist/json2json.js",
+  "version": "0.2.3",
+  "homepage": "https://github.com/tuxpiper/q-json2json",
+  "authors": [
+    "David Losada"
+  ],
+  "description": "json 2 json transform which use q promises",
+  "keywords": [
+    "json",
+    "q"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "Sysmo": "joelvh/Sysmo.js"
+  }
+}

@@ -1,7 +1,6 @@
 # handle CommonJS/Node.js or browser
 
 sysmo = require?('sysmo') || window?.Sysmo
-Q = require 'q'
 
 # class definition
 

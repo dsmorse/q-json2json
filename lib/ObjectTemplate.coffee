@@ -4,8 +4,6 @@
 sysmo           = require?('sysmo') || window?.Sysmo
 TemplateConfig  = require?('./TemplateConfig') || window?.json2json.TemplateConfig
 
-Q = require 'q'
-
 # class definition
 
 class ObjectTemplate
