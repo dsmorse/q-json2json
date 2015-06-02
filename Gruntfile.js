@@ -32,7 +32,7 @@ module.exports = function(grunt) {
 				banner: '<%= meta.banner %>'
 			},
 			dist_js: {
-				src: ['dist/json2json.js', 'bower_components/Sysmo/lib/sysmo.js'],
+				src: ['bower_components/Sysmo/lib/sysmo.js', 'dist/json2json.js'],
 				dest: 'dist/json2json.js'
 			}
 		},

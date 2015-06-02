@@ -19,7 +19,7 @@
     "test",
     "tests"
   ],
-  "dependencies": {
+  "devDependencies": {
     "Sysmo": "joelvh/Sysmo.js"
   }
 }
